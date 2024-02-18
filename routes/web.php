@@ -23,6 +23,7 @@ Route::get('/', function () {
 Route::prefix('tickets')->group(function () {
     Route::get('/open', [TicketController::class, 'open']);
     Route::get('/closed', [TicketController::class, 'closed']);
+    Route::get('/view/{id}', [TicketController::class, 'view']);
 });
 
 Route::prefix('users')->group(function () {
