@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\User;
 use App\Models\Ticket;
 use App\Repositories\TicketRepository;
 use App\Repositories\UserRepository;
@@ -158,5 +159,82 @@ class TicketRepositoryTest extends TestCase
         $count = $ticketRepo->countOpenTickets();
 
         $this->assertEquals($count, 10);
+    }
+
+    public function testCanGetOpenTickets() {
+        $this->seed();
+        // By default this seeds 5 users, 10 open tickets and 5 closed
+
+        $ticketRepo = new TicketRepository();
+        $tickets = $ticketRepo->getOpenTickets();
+
+        $this->assertEquals($tickets->count(), 10);
+    }
+
+    public function testCanGetClosedTickets() {
+        $this->seed();
+        // By default this seeds 5 users, 10 open tickets and 5 closed
+
+        $ticketRepo = new TicketRepository();
+        $tickets = $ticketRepo->getClosedTickets();
+
+        $this->assertEquals($tickets->count(), 5);
+    }
+
+    public function testCanGetTicketsByUserEmail() {
+        // Add some redundant users and ticket - we want to make sure it's not these that come back
+        $this->seed(); // By default this seeds 5 users, 10 open tickets and 5 closed - we want user 6
+
+        // Hardcode an email
+        $email = "this.is.the.testing.email@testing.com";
+
+        // Add this user and 2 tickets
+        User::factory()->create(['id' => 6, 'email' => $email]);
+        Ticket::factory()->count(2)->create(['user_id' => 6]);
+
+        // And a completed ticket as we want to return all tickets
+        Ticket::factory()->complete()->create(['user_id' => 6]);
+
+        // Pull tickets for this users email
+        $ticketRepo = new TicketRepository();
+        $tickets = $ticketRepo->getTicketsByUserEmail($email);
+
+        $this->assertEquals($tickets->count(), 3);
+    }
+
+    public function testCanGetUserWithMostTickets() {
+        $ticketRepo = new TicketRepository();
+
+        // Create 3 users
+        User::factory()->count(3)->create();
+
+        // Create 2 tickets not for this user and 3 for it - we should match the 3
+        Ticket::factory()->create(['user_id' => 1]);
+        Ticket::factory()->create(['user_id' => 2]);
+        Ticket::factory()->count(3)->create(['user_id' => 3]);
+
+        // // Get the user we expect
+        $user = User::find(3);
+
+        $userToCheck = $ticketRepo->getUserWithMostTickets();
+        $this->assertSame($user->id, $userToCheck->id);
+    }
+
+    public function testCanGetLastProcessedTicketTime() {
+        // Hardcode some dates
+        $date1 = "2024-01-04 12:00:00";
+        $date2 = "2024-02-10 14:10:30"; // we should match this value
+
+        // Create a user for the tickets
+        User::factory()->create();
+
+        // Add the tickets with the hardcoded dates - we should match ticket2's date when updated to complete
+        $ticket1 = Ticket::factory()->complete()->create(['updated_at' => $date1]);
+        $ticket2 = Ticket::factory()->complete()->create(['updated_at' => $date2]);
+
+        $ticketRepo = new TicketRepository();
+        $dateToCheck = $ticketRepo->getLastProcessedTicketTime();
+
+        $this->assertEquals(Carbon::create($date2)->format('l jS \o\f F Y H:i'), $dateToCheck);
     }
 }

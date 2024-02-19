@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\User;
 use App\Models\Ticket;
 use Carbon\Carbon;
 
@@ -32,5 +33,44 @@ class TicketRepository
     public function countOpenTickets()
     {
         return Ticket::where('status', false)->count();
+    }
+
+    public function getOpenTickets($perPage = 10)
+    {
+        return Ticket::where('status', false)
+            ->paginate($perPage);
+    }
+
+    public function getClosedTickets($perPage = 10)
+    {
+        return Ticket::where('status', true)
+            ->paginate($perPage);
+    }
+
+    public function getTicketsByUserEmail($email, $perPage = 10)
+    {
+        return User::where('email', $email)
+            ->first()
+            ->tickets()
+            ->paginate($perPage);
+    }
+
+    public function getUserWithMostTickets() {
+        $ticket = Ticket::select('user_id')
+            ->groupBy('user_id')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(1)
+            ->first();
+
+        return User::find($ticket->user_id);
+    }
+
+    public function getLastProcessedTicketTime() {
+        $ticket = Ticket::where('status', true)
+            ->orderByDesc('updated_at')
+            ->limit(1)
+            ->first();
+
+        return $ticket->updated_at->format('l jS \o\f F Y H:i');
     }
 }
