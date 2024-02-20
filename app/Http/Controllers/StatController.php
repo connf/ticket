@@ -2,17 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\TicketRepository;
 use Illuminate\Http\Request;
 
 class StatController extends Controller
 {
     public function view() {
-        /**
-         * /stats - Returns the following stats: 
-         *  total number of tickets in the database; 
-         *  total number of unprocessed tickets in the database; 
-         *  name of the user who submitted the highest number of tickets (count by email); and 
-         *  time when the last processing of a ticket was done. 
-         */
+        $ticketRepo = new TicketRepository();
+
+        $total = $ticketRepo->countTotalTickets();
+        $unprocessed = $ticketRepo->countOpenTickets();
+        $user = $ticketRepo->getUserWithMostTickets();
+        $userWithMost = $user->first_name . " " . $user->last_name;
+        $lastProcessed = $ticketRepo->getLastProcessedTicketTime(false);
+
+        $stats = [
+            'total_tickets' => $total,
+            'unprocessed_tickets' => $unprocessed,
+            'user_with_most_tickets' => $userWithMost,
+            'last_processed' => $lastProcessed
+        ];
+
+        return response()->json($stats);
     }
 }

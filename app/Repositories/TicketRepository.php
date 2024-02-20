@@ -13,16 +13,18 @@ class TicketRepository
         return Ticket::create($data);
     }
 
-    public function find(int $id): ?Ticket
+    public function find(int $id)
     {
-        $ticket = Ticket::find($id);
+        $ticket = Ticket::find($id)
+            ->with('user')
+            ->first();
 
         return $ticket;
     }
 
     public function findBy(string $search, string $by = "subject")
     {
-        return Ticket::where($by, $search)->get();
+        return Ticket::where($by, $search)->with('user')->get();
     }
 
     public function countTotalTickets()
@@ -38,12 +40,14 @@ class TicketRepository
     public function getOpenTickets($perPage = 10)
     {
         return Ticket::where('status', false)
+            ->with('user')
             ->paginate($perPage);
     }
 
     public function getClosedTickets($perPage = 10)
     {
         return Ticket::where('status', true)
+            ->with('user')
             ->paginate($perPage);
     }
 
@@ -65,13 +69,17 @@ class TicketRepository
         return User::find($ticket->user_id);
     }
 
-    public function getLastProcessedTicketTime() {
+    public function getLastProcessedTicketTime($humanReadable = false) {
         $ticket = Ticket::where('status', true)
             ->orderByDesc('updated_at')
             ->limit(1)
             ->first();
 
-        return $ticket->updated_at->format('l jS \o\f F Y H:i');
+        $dateTime = $ticket->updated_at;
+
+        if ($humanReadable) $dateTime = $dateTime->format('l jS \o\f F Y H:i');
+
+        return $dateTime;
     }
 
     public function getNextUnprocessedTicket()
