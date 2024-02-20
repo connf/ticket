@@ -233,8 +233,11 @@ class TicketRepositoryTest extends TestCase
         $ticket2 = Ticket::factory()->complete()->create(['updated_at' => $date2]);
 
         $ticketRepo = new TicketRepository();
+        
         $dateToCheck = $ticketRepo->getLastProcessedTicketTime();
+        $this->assertEquals(Carbon::create($date2), $dateToCheck);
 
+        $dateToCheck = $ticketRepo->getLastProcessedTicketTime(true);
         $this->assertEquals(Carbon::create($date2)->format('l jS \o\f F Y H:i'), $dateToCheck);
     }
 
