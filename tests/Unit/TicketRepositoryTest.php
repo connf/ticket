@@ -237,4 +237,14 @@ class TicketRepositoryTest extends TestCase
 
         $this->assertEquals(Carbon::create($date2)->format('l jS \o\f F Y H:i'), $dateToCheck);
     }
+
+    public function testCanGetNextUnprocessedTicket()
+    {
+        $this->seed(); // By default this seeds 5 users, 5 closed tickets and 10 open tickets - we want ticket 6
+
+        $ticketRepo = new TicketRepository();
+        $ticketToCheck = $ticketRepo->getNextUnprocessedTicket();
+
+        $this->assertEquals($ticketToCheck->id, 6);
+    }
 }

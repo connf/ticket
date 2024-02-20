@@ -73,4 +73,12 @@ class TicketRepository
 
         return $ticket->updated_at->format('l jS \o\f F Y H:i');
     }
+
+    public function getNextUnprocessedTicket()
+    {
+        return Ticket::where('status', false)
+            ->orderBy('id')
+            ->limit(1)
+            ->first();
+    }
 }
