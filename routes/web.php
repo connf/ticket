@@ -19,15 +19,3 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::prefix('tickets')->group(function () {
-    Route::get('/open', [TicketController::class, 'open']);
-    Route::get('/closed', [TicketController::class, 'closed']);
-    Route::get('/view/{id}', [TicketController::class, 'view']);
-});
-
-Route::prefix('users')->group(function () {
-    Route::get('/{email}/tickets', [UserController::class, 'tickets']);
-});
-
-Route::get('/stats', [StatController::class, 'view']);
